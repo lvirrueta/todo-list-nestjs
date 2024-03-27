@@ -12,4 +12,14 @@ export const Routes = {
     SignIn: 'sign-in',
     SignUp: 'sign-up',
   },
+
+  ToDo: {
+    ApiTags: `todo`,
+    Controller: `todo`,
+    List,
+    Detail,
+    Create,
+    Update,
+    Delete,
+  },
 };
