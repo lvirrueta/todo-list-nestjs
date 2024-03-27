@@ -1,12 +1,17 @@
 // Dependencies
+import * as ms from 'ms';
 import * as bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
+import { JwtService } from '@nestjs/jwt';
 import { Inject, Injectable } from '@nestjs/common';
 
 // Repositories
 import { UserRepository } from 'src/auth/infrastructure/repository/auth.repository';
 
 // Interface
-import { IUser } from '../interface/i-user';
+import { IJwtPayload } from '../interface/i-jwt-payload';
+import { IAccessToken } from '../interface/i-access-token';
+import { ID } from 'src/common/application/types/types.types';
 import { UserEntity } from 'src/auth/infrastructure/entities/user.entity';
 import { IAuthRepository } from '../irepositories/auth.repository.interface';
 
@@ -16,9 +21,10 @@ import { SignInDto } from 'src/auth/application/dto/sign-in.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(@Inject(UserRepository) public readonly userRepository: IAuthRepository) {}
+  constructor(private readonly jwtService: JwtService, @Inject(UserRepository) public readonly userRepository: IAuthRepository) {}
 
-  public async createUser(dto: SignInDto): Promise<IUser> {
+  /** Register to the application */
+  public async createUser(dto: SignInDto): Promise<IAccessToken> {
     let { password, username } = dto;
 
     username = username.toLocaleLowerCase();
@@ -30,7 +36,7 @@ export class AuthService {
     try {
       const newUser = await this.userRepository.saveEntity(userDto, queryRunner);
       await this.userRepository.commitTransaction(queryRunner);
-      return newUser;
+      return await this.generateJwtToken(newUser.id);
     } catch (e) {
       await this.userRepository.rollbackTransaction(queryRunner);
       throw e;
@@ -39,20 +45,46 @@ export class AuthService {
     }
   }
 
-  public async signUp(dto: SignUpDto): Promise<IUser> {
+  /** Login and get JWT Token */
+  public async signUp(dto: SignUpDto): Promise<IAccessToken> {
     const { password: passwordLogin, username } = dto;
     const userBD = await this.userRepository.findByUsername(username);
     const { password: passwordBD } = { ...userBD };
 
-    return this.comparePassword(passwordLogin, passwordBD) && userBD;
+    if (this.comparePassword(passwordLogin, passwordBD) && userBD) {
+      return await this.generateJwtToken(userBD.id);
+    }
   }
 
+  /** Compare Password login with password hashed in the DB */
   private comparePassword(passwordLogin: string, passwordUser: string): boolean {
     return bcrypt.compareSync(passwordLogin || '', passwordUser || '');
   }
 
+  /** Hash Password */
   private async hashPassword(password: string): Promise<string> {
     const salt = await bcrypt.genSalt();
     return await bcrypt.hash(password, salt);
+  }
+
+  /** Generate JWT Token */
+  private async generateJwtToken(userID: ID): Promise<IAccessToken> {
+    const idToken = uuidv4();
+
+    const payload: IJwtPayload = {
+      userID,
+      jti: idToken,
+    };
+
+    const msTokenExpire = '1h';
+    const msRefreshTokenExpire = '2h';
+
+    const accessToken = this.jwtService.sign(payload, { expiresIn: ms(msTokenExpire) });
+    const refreshToken = this.jwtService.sign({ jti: idToken }, { expiresIn: ms(msRefreshTokenExpire) });
+
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 }
