@@ -1,4 +1,4 @@
-import { Repository, DataSource, EntityTarget, QueryRunner } from 'typeorm';
+import { Repository, DataSource, EntityTarget, QueryRunner, FindManyOptions } from 'typeorm';
 import { ID } from '../application/types/types.types';
 import { IGenericRepository } from '../domain/irepositories/i-repository.repository.interface';
 
@@ -8,10 +8,12 @@ export abstract class GenericRepository<E> extends Repository<E> implements IGen
   }
 
   /** list Entities */
-  public async listEntities(query?: QueryRunner): Promise<E[]> {
+  public async listEntities(opt?: FindManyOptions<E>, query?: QueryRunner): Promise<E[]> {
+    const { where } = { ...opt };
+
     const repository = this.getSimpleOrTransaction(query);
 
-    return await repository.find();
+    return await repository.find({ where });
   }
 
   /** list Entities and Count */
@@ -20,10 +22,13 @@ export abstract class GenericRepository<E> extends Repository<E> implements IGen
   }
 
   /** find One Entity by id */
-  public async findOneEntity(id: ID, query?: QueryRunner): Promise<E> {
+  public async findOneEntity(id: ID, opt?: FindManyOptions<E>, query?: QueryRunner): Promise<E> {
+    let { where } = { ...opt };
     const repository = this.getSimpleOrTransaction(query);
 
-    return await repository.findOne({ where: { id } as any });
+    where = { ...where, id } as any;
+
+    return await repository.findOne({ where });
   }
 
   /** save Entity */

@@ -12,11 +12,11 @@ import { StatusEnum } from 'src/todo-list/domain/enum/status.enum';
 
 // Types
 import { ID } from 'src/common/application/types/types.types';
-import { CreateToDoDto } from 'src/todo-list/application/dto/create-todo.dto';
 
 @Entity({ name: 'tblToDo' })
 export class ToDoEntity implements IToDo {
-  constructor(dto?: CreateToDoDto) {
+  constructor(dto?: Partial<IToDo>) {
+    this.id = dto?.id;
     this.title = dto?.title;
     this.description = dto?.description;
     this.status = dto?.status;
