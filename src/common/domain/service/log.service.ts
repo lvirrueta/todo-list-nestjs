@@ -17,8 +17,17 @@ export class LogService {
 
   public async createLog(dto: ILog): Promise<ILog> {
     dto = this.deletePassword(dto);
+    dto = this.deleteFile(dto);
     const entity = new LogEntity(dto);
     return await this.logRepository.saveEntity(entity);
+  }
+
+  private deleteFile(dto: ILog): ILog {
+    const { url } = dto;
+    if (url.includes('todo/create')) {
+      delete dto.body['file'];
+    }
+    return dto;
   }
 
   private deletePassword(dto: ILog): ILog {
