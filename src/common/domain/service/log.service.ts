@@ -24,7 +24,7 @@ export class LogService {
 
   private deleteFile(dto: ILog): ILog {
     const { url } = dto;
-    if (url.includes('todo/create')) {
+    if (url.includes('todo')) {
       delete dto.body['file'];
     }
     return dto;
