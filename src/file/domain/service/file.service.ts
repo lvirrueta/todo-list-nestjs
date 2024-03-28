@@ -35,12 +35,19 @@ export class FileService {
     return await this.fileRepository.saveEntity(fileE, query);
   }
 
+  public async getFile(id: ID): Promise<IFile> {
+    return await this.fileRepository.findOneEntity(id);
+  }
+
   public async updateFile(file: IFile, query: QueryRunner): Promise<IFile> {
+    const { file: file64 } = file;
+    file.format = this.whichFormat(file64);
+    file.sizeMB = this.sizeFile(file64);
     return await this.fileRepository.updateEntity(file, query);
   }
 
   public async deleteFile(id: ID, query?: QueryRunner): Promise<IFile> {
-    return await this.fileRepository.deleteEntity(id, query);
+    return await this.fileRepository.softDeleteEntity(id, query);
   }
 
   private sizeFile(file64: string): number {
@@ -67,6 +74,7 @@ export class FileService {
         return FormatEnum.PDF;
 
       default:
+        return null;
         break;
     }
   }

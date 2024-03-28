@@ -2,10 +2,12 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 // Interface
+import { IFile } from 'src/file/domain/interface/file.interface';
 import { IToDo } from 'src/todo-list/domain/interface/todo.interface';
 
 // Entity
 import { UserEntity } from 'src/auth/infrastructure/entities/user.entity';
+import { FileEntity } from 'src/file/infrastructure/entities/file.entity';
 
 // Enum
 import { StatusEnum } from 'src/todo-list/domain/enum/status.enum';
@@ -23,7 +25,6 @@ export class ToDoEntity implements IToDo {
     this.deadlineDate = dto?.deadlineDate;
     this.comments = dto?.comments;
     this.tags = dto?.tags;
-    this.file = dto?.file;
   }
 
   @PrimaryGeneratedColumn('uuid', { name: 'ToDo_uuid' })
@@ -51,6 +52,8 @@ export class ToDoEntity implements IToDo {
   @Column({ name: 'ToDo_strTags', nullable: true, type: 'json' })
   tags?: string[];
 
-  @Column({ name: 'ToDo_strFile', nullable: true })
-  file?: string;
+  // @Column({ name: 'ToDo_strFile', nullable: true })
+  @ManyToOne(() => FileEntity)
+  @JoinColumn({ name: 'File_uuid' })
+  file?: IFile;
 }

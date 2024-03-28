@@ -6,7 +6,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
 
 /** Keys To Omit */
-type OmitKeys = Pick<IToDo, 'id' | 'createdBy'>;
+type OmitKeys = Pick<IToDo, 'id' | 'createdBy' | 'file'>;
 type IToDoOmit = Omit<IToDo, keyof OmitKeys>;
 
 export class UpdateToDoDto extends CreateToDoDto implements IToDoOmit {

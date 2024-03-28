@@ -24,7 +24,7 @@ export class FileEntity implements IFile {
   @Column({ name: 'File_base64File' })
   file: string;
 
-  @Column({ name: 'File_enumFile', enum: FormatEnum, enumName: 'File_enumFile' })
+  @Column({ name: 'File_enumFile', enum: FormatEnum, enumName: 'File_enumFile', nullable: true })
   format: FormatEnum;
 
   @DeleteDateColumn({ name: 'File_dateDeleteAt', type: 'timestamp with time zone' })
