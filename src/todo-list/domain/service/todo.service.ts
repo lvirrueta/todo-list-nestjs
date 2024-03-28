@@ -10,8 +10,10 @@ import { ToDoRepository } from 'src/todo-list/infrastructure/repository/todo.rep
 // Interface
 import { IToDo } from '../interface/todo.interface';
 import { ID } from 'src/common/application/types/types.types';
+import { ISearchOpt } from 'src/common/domain/interface/search.interface';
 import { IUserStrategy } from 'src/auth/domain/interface/i-user.strategy';
 import { IToDoRepository } from '../irepositories/todo.repository.interface';
+import { IListAndCount } from 'src/common/domain/interface/list-and-count.interface';
 
 // Entity
 import { UserEntity } from 'src/auth/infrastructure/entities/user.entity';
@@ -30,11 +32,11 @@ export class TodoService {
 
   public async getTodo(id: ID, userSt: IUserStrategy): Promise<IToDo> {
     return await this.toDoRepository.findOneFile(id, userSt);
-    // return await this.toDoRepository.findOneEntity(id, { where: { createdBy: { id: userSt.id } } });
   }
 
-  public async listTodo(userSt: IUserStrategy): Promise<IToDo[]> {
-    return await this.toDoRepository.listEntities({ where: { createdBy: { id: userSt.id } } });
+  public async listTodo(opt: ISearchOpt, userSt: IUserStrategy): Promise<IListAndCount<IToDo>> {
+    const [results, total] = await this.toDoRepository.listToDoAndCount(opt, userSt);
+    return { results, total };
   }
 
   public async createTodo(dto: CreateToDoDto, userSt: IUserStrategy): Promise<IToDo> {

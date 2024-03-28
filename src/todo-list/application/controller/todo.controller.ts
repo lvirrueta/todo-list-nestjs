@@ -1,5 +1,5 @@
 // Dependencies
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 // Services
@@ -8,6 +8,8 @@ import { TodoService } from 'src/todo-list/domain/service/todo.service';
 // Interface
 import { IToDo } from 'src/todo-list/domain/interface/todo.interface';
 import { IUserStrategy } from 'src/auth/domain/interface/i-user.strategy';
+import { ISearchOpt } from 'src/common/domain/interface/search.interface';
+import { IListAndCount } from 'src/common/domain/interface/list-and-count.interface';
 
 // DTO
 import { CreateToDoDto } from '../dto/create-todo.dto';
@@ -28,10 +30,21 @@ export class ToDoController {
     return await this.toDoService.getTodo(id, user);
   }
 
-  @Get(Routes.ToDo.List)
+  @Get(Routes.ToDo.Search)
   @ApiOperation({ summary: 'list of a todo', description: '' })
-  async list(@GetUser() user: IUserStrategy): Promise<IToDo[]> {
-    return await this.toDoService.listTodo(user);
+  async list(
+    @Query('limit') limit: number,
+    @Query('offset') offset: number,
+    @Query('value') value: string,
+    @GetUser() user: IUserStrategy,
+  ): Promise<IListAndCount<IToDo>> {
+    const opt: ISearchOpt = {
+      limit,
+      offset,
+      value,
+    };
+
+    return await this.toDoService.listTodo(opt, user);
   }
 
   @Post(Routes.ToDo.Create)

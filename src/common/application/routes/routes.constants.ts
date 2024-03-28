@@ -16,7 +16,7 @@ export const Routes = {
   ToDo: {
     ApiTags: `todo`,
     Controller: `todo`,
-    List,
+    Search,
     Detail,
     Create,
     Update,

@@ -10,4 +10,5 @@ import { QueryRunner } from 'typeorm';
  */
 export interface IToDoRepository extends IGenericRepository<ToDoEntity> {
   findOneFile(id: ID, user: IUserStrategy, qr?: QueryRunner): Promise<ToDoEntity>;
+  listToDoAndCount(serchOpt, user: IUserStrategy, qr?: QueryRunner): Promise<[ToDoEntity[], number]>;
 }
