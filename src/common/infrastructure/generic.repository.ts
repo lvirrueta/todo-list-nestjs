@@ -94,7 +94,7 @@ export abstract class GenericRepository<E> extends Repository<E> implements IGen
   }
 
   /** get queryRunner repository or a simple repository */
-  private getSimpleOrTransaction(query?: QueryRunner) {
+  protected getSimpleOrTransaction(query?: QueryRunner) {
     return query ? query.manager.getRepository(this.target) : this.dataSource.getRepository(this.target);
   }
 }
