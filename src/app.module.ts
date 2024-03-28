@@ -18,9 +18,10 @@ import { JwtAuthGuard } from './auth/application/guards/jwt.auth.guard';
 
 // Interceptor
 import { LogInterceptor } from './common/application/interceptor/log.interceptor';
+import { FileModule } from './file/file.module';
 
 @Module({
-  imports: [AuthModule, ConfigAppModule, ToDoListModule],
+  imports: [AuthModule, ConfigAppModule, ToDoListModule, FileModule],
   providers: [
     LogService,
     LogRepository,
