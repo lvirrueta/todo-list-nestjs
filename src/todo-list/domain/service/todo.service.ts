@@ -45,6 +45,7 @@ export class TodoService {
 
   public async createTodo(dto: CreateToDoDto, userSt: IUserStrategy): Promise<IToDo> {
     const { file } = dto;
+    dto = this.lowerCaseTags(dto);
 
     const transaction = await this.toDoRepository.createAndStartTransaction();
     try {
@@ -68,6 +69,8 @@ export class TodoService {
 
   public async updateTodo(dto: UpdateToDoDto, userSt: IUserStrategy): Promise<IToDo> {
     const { id, file } = dto;
+    dto = this.lowerCaseTags(dto);
+
     const entity = await this.getTodo(id, userSt);
     if (!entity) ThrowError.httpException(Errors.GenericRepository.UpdateEntity);
 
@@ -119,5 +122,10 @@ export class TodoService {
     } finally {
       await this.toDoRepository.releaseTransaction(transaction);
     }
+  }
+
+  private lowerCaseTags<T extends CreateToDoDto>(dto: T): T {
+    dto.tags = dto.tags?.map((t) => t.toLowerCase());
+    return dto;
   }
 }

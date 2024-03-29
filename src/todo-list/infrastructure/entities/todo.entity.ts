@@ -49,7 +49,7 @@ export class ToDoEntity implements IToDo {
   @JoinColumn({ name: 'User_uuid' })
   createdBy: Partial<UserEntity>;
 
-  @Column({ name: 'ToDo_strTags', nullable: true, type: 'json' })
+  @Column({ name: 'ToDo_strTags', nullable: true, type: 'jsonb' })
   tags?: string[];
 
   // @Column({ name: 'ToDo_strFile', nullable: true })

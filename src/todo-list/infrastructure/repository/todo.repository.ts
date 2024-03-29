@@ -25,9 +25,6 @@ export class ToDoRepository extends GenericRepository<ToDoEntity> implements ITo
   public async listToDoAndCount(serchOpt: ISearchOpt, user: IUserStrategy, qr?: QueryRunner): Promise<[ToDoEntity[], number]> {
     const { id: idUser } = user;
     const { limit, offset, value } = { ...serchOpt };
-    const today = new Date();
-
-    console.log(today);
 
     const transaction = this.getSimpleOrTransaction(qr);
     const qb = transaction.createQueryBuilder('todo');
@@ -38,8 +35,10 @@ export class ToDoRepository extends GenericRepository<ToDoEntity> implements ITo
       new Brackets((nqb) => {
         const val = value.split(' ').filter((s) => s.length);
 
-        val.forEach((v) => {
+        val.forEach((val) => {
+          const v = val.toLowerCase();
           nqb.where(`todo.title ilike '%${v}%'`);
+          nqb.orWhere(`todo.tags @> '["${v}"]'`);
           nqb.orWhere('todo.status = :v', { v });
           nqb.orWhere('file.format = :v', { v });
 
