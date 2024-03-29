@@ -16,6 +16,10 @@ import { FileEntity } from 'src/file/infrastructure/entities/file.entity';
 import { FormatEnum } from '../enum/format.enum';
 import { ID } from 'src/common/application/types/types.types';
 
+// Constants
+import { ThrowError } from 'src/common/application/utils/throw-error';
+import { Errors } from 'src/common/application/error/error.constants';
+
 @Injectable()
 export class FileService {
   constructor(@Inject(FileRepository) public readonly fileRepository: IFileRepository) {}
@@ -43,6 +47,12 @@ export class FileService {
     const { file: file64 } = file;
     file.format = this.whichFormat(file64);
     file.sizeMB = this.sizeFile(file64);
+
+    if (!file.format) {
+      await this.fileRepository.updateEntity(file, query);
+      return await this.deleteFile(file.id, query);
+    }
+
     return await this.fileRepository.updateEntity(file, query);
   }
 
@@ -53,6 +63,9 @@ export class FileService {
   private sizeFile(file64: string): number {
     const buffer = Buffer.from(file64);
     const sizeMB = buffer.length / 1e6;
+
+    if (sizeMB >= 5) ThrowError.httpException(Errors.File.MaxSize);
+
     return sizeMB;
   }
 
@@ -62,6 +75,7 @@ export class FileService {
     const PNG_64 = 'IVBOR';
     const JPG_64 = '9J/4A';
     const PDF_64 = 'JVBER';
+    const DeleteFile = '';
 
     switch (format64) {
       case PNG_64:
@@ -73,8 +87,11 @@ export class FileService {
       case PDF_64:
         return FormatEnum.PDF;
 
-      default:
+      case DeleteFile:
         return null;
+
+      default:
+        ThrowError.httpException(Errors.File.FileNotSupported);
         break;
     }
   }

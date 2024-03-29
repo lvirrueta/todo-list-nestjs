@@ -23,6 +23,10 @@ import { ToDoEntity } from 'src/todo-list/infrastructure/entities/todo.entity';
 import { CreateToDoDto } from 'src/todo-list/application/dto/create-todo.dto';
 import { UpdateToDoDto } from 'src/todo-list/application/dto/update-todo.dto';
 
+// Constants
+import { ThrowError } from 'src/common/application/utils/throw-error';
+import { Errors } from 'src/common/application/error/error.constants';
+
 @Injectable()
 export class TodoService {
   constructor(
@@ -56,6 +60,7 @@ export class TodoService {
       return newTodo;
     } catch (error) {
       await this.toDoRepository.rollbackTransaction(transaction);
+      throw error;
     } finally {
       await this.toDoRepository.releaseTransaction(transaction);
     }
@@ -64,7 +69,7 @@ export class TodoService {
   public async updateTodo(dto: UpdateToDoDto, userSt: IUserStrategy): Promise<IToDo> {
     const { id, file } = dto;
     const entity = await this.getTodo(id, userSt);
-    if (!entity) return;
+    if (!entity) ThrowError.httpException(Errors.GenericRepository.UpdateEntity);
 
     const entityFile = await this.fileService.getFile(entity.file?.id);
     if (entityFile) entityFile.file = file;
@@ -74,22 +79,32 @@ export class TodoService {
       const user = new UserEntity();
       user.id = userSt.id;
       entity.createdBy = user;
-      const entityU = await this.toDoRepository.updateEntity(entity);
-      await this.fileService.updateFile(entityFile, transaction);
+
+      const todo = new ToDoEntity({ ...dto, file: null });
+      todo.file = entityFile;
+
+      const entityU = await this.toDoRepository.updateEntity(todo);
+      if (entityFile) {
+        await this.fileService.updateFile(entityFile, transaction);
+      }
+
+      if (file.length) {
+        await this.fileService.createFile(file, transaction);
+      }
+
       await this.toDoRepository.commitTransaction(transaction);
       return entityU;
     } catch (error) {
       await this.toDoRepository.rollbackTransaction(transaction);
+      throw error;
     } finally {
       await this.toDoRepository.releaseTransaction(transaction);
     }
-
-    return await this.toDoRepository.updateEntity(entity);
   }
 
   public async deleteTodo(id: ID, user: IUserStrategy): Promise<IToDo> {
     const entity = await this.getTodo(id, user);
-    if (!entity) return;
+    if (!entity) ThrowError.httpException(Errors.GenericRepository.DeleteEntity);
 
     const file = entity.file;
     const transaction = await this.toDoRepository.createAndStartTransaction();
@@ -100,7 +115,7 @@ export class TodoService {
       return entityDel;
     } catch (error) {
       await this.toDoRepository.rollbackTransaction(transaction);
-      await this.toDoRepository.rollbackTransaction(transaction);
+      throw error;
     } finally {
       await this.toDoRepository.releaseTransaction(transaction);
     }

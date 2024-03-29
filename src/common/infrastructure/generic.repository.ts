@@ -1,6 +1,8 @@
 import { Repository, DataSource, EntityTarget, QueryRunner, FindManyOptions } from 'typeorm';
 import { ID } from '../application/types/types.types';
 import { IGenericRepository } from '../domain/irepositories/i-repository.repository.interface';
+import { ThrowError } from '../application/utils/throw-error';
+import { Errors } from '../application/error/error.constants';
 
 export abstract class GenericRepository<E> extends Repository<E> implements IGenericRepository<E> {
   constructor(public target: EntityTarget<E>, public dataSource: DataSource) {
@@ -43,7 +45,7 @@ export abstract class GenericRepository<E> extends Repository<E> implements IGen
     const repository = this.getSimpleOrTransaction(query);
 
     const entityF = await repository.findOne({ where: { id: entity['id'] } as any });
-    if (!entityF) return;
+    if (!entityF) ThrowError.httpException(Errors.GenericRepository.UpdateEntity);
 
     return await repository.save(entity);
   }
@@ -53,7 +55,7 @@ export abstract class GenericRepository<E> extends Repository<E> implements IGen
     const repository = this.getSimpleOrTransaction(query);
 
     const entityF = await repository.findOne({ where: { id } as any });
-    if (!entityF) return;
+    if (!entityF) ThrowError.httpException(Errors.GenericRepository.DeleteEntity);
 
     return await repository.remove(entityF);
   }
@@ -63,7 +65,7 @@ export abstract class GenericRepository<E> extends Repository<E> implements IGen
     const repository = this.getSimpleOrTransaction(query);
 
     const entityF = await repository.findOne({ where: { id } as any });
-    if (!entityF) return;
+    if (!entityF) ThrowError.httpException(Errors.GenericRepository.DeleteEntity);
 
     await repository.softDelete(id);
     return entityF;

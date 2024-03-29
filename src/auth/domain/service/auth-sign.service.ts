@@ -19,6 +19,10 @@ import { IAuthRepository } from '../irepositories/auth.repository.interface';
 import { SignUpDto } from 'src/auth/application/dto/sign-up.dto';
 import { SignInDto } from 'src/auth/application/dto/sign-in.dto';
 
+// Constants
+import { ThrowError } from 'src/common/application/utils/throw-error';
+import { Errors } from 'src/common/application/error/error.constants';
+
 @Injectable()
 export class AuthService {
   constructor(private readonly jwtService: JwtService, @Inject(UserRepository) public readonly userRepository: IAuthRepository) {}
@@ -39,6 +43,9 @@ export class AuthService {
       return await this.generateJwtToken(newUser.id);
     } catch (e) {
       await this.userRepository.rollbackTransaction(queryRunner);
+      if (e?.code === '23505') {
+        ThrowError.httpException(Errors.Auth.UserRegistered);
+      }
       throw e;
     } finally {
       await this.userRepository.releaseTransaction(queryRunner);
@@ -54,6 +61,8 @@ export class AuthService {
     if (this.comparePassword(passwordLogin, passwordBD) && userBD) {
       return await this.generateJwtToken(userBD.id);
     }
+
+    ThrowError.httpException(Errors.Auth.IncorrectCredentials);
   }
 
   /** Compare Password login with password hashed in the DB */
